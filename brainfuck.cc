@@ -1,18 +1,57 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 
 using namespace std;
 
-int main(int argc, char *argv[])
+static void show_usage(string name)
 {
-    vector<char> memory (3000);        // holds the memory
-    vector<char> buffer;               // holds the program
-    char *ptr = memory.data();         // holds the pointer to the memory
+    cerr << "usage: " << name << " <path>\n\n"
+         << "options:\n"
+         << "  -h --help\tshow this help message"
+         << endl;
+}
 
-    char c;                            // holds a single character
-    while(cin.get(c))                  // read the brainfuck program character
-        buffer.push_back(c);           // by character
+int interpret(string path)
+{
+    vector<char> buffer;               // holds the program
+
+    ifstream infile(path, ios::in);
+    if (infile.is_open()) {
+        char character;
+        while (infile.get(character))         // read the brainfuck program character
+        {                                  // by character
+            switch (character)             // only add brainfuck characters to the
+            {                              // program buffer
+                case '>':
+                    [[fallthrough]];
+                case '<':
+                    [[fallthrough]];
+                case '+':
+                    [[fallthrough]];
+                case '-':
+                    [[fallthrough]];
+                case '.':
+                    [[fallthrough]];
+                case ',':
+                    [[fallthrough]];
+                case '[':
+                    [[fallthrough]];
+                case ']':
+                    buffer.push_back(character);
+                    break;
+            }
+        }
+        infile.close();
+    }
+    else {
+      cerr << "Unable to open file" << endl;
+      return 1;
+    }
+
+    vector<char> memory (3000);        // holds the memory
+    char *ptr = memory.data();         // holds the pointer to the memory
 
                                        // loop over the program
     for (size_t idx = 0; idx < buffer.size(); ++idx)
@@ -44,7 +83,7 @@ int main(int argc, char *argv[])
 
                                        // input a character and store it in the
             case ',':                  // cell at the pointer
-                // TODO
+                cin.get(*ptr);
                 break;
                                        // jump past the matching ']' if the cell
             case '[':                  // under the pointer is '0'
@@ -99,4 +138,26 @@ int main(int argc, char *argv[])
                 break;
         }
     }
+
+    return 0;
+}
+
+int main(int argc, char *argv[])
+{
+    if (argc != 2)
+    {
+        show_usage(argv[0]);
+        return 1;
+    }
+
+    string argument = argv[1];         // holds the second argument
+                                       // display usage on help flags
+    if (argument == "-h" || argument == "--help")
+    {
+        show_usage(argv[0]);
+        return 0;
+    }
+
+
+    return interpret(argument);        // interpret the brainfuck program
 }
