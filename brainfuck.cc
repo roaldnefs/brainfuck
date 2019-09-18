@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <stack>
 
 using namespace std;
 
@@ -9,7 +8,6 @@ int main(int argc, char *argv[])
 {
     vector<char> memory (3000);        // holds the memory
     vector<char> buffer;               // holds the program
-    stack<int> stack;                  // holds the indexes for loops
     char *ptr = memory.data();         // holds the pointer to the memory
 
     char c;                            // holds a single character
@@ -50,16 +48,54 @@ int main(int argc, char *argv[])
                 break;
                                        // jump past the matching ']' if the cell
             case '[':                  // under the pointer is '0'
-                stack.push(idx);       // push the current location to the stack
+                if (*ptr == 0)
+                {
+                    for (size_t peek_idx = (idx + 1), skip = 0; peek_idx < buffer.size(); ++peek_idx)
+                    {
+                        switch (buffer.at(peek_idx))
+                        {
+                            case '[':
+                                ++skip;
+                                break;
+
+                            case ']':
+                                if (skip == 0)
+                                {
+                                    idx = peek_idx;
+                                    peek_idx = buffer.size();
+                                }
+                                else
+                                    --skip;
+                                break;
+                        }
+                    }
+                }
                 break;
 
                                        // jump back to the matching '[' if the
             case ']':                  // cell under the pointer is nonzero
-                if (*ptr == 0)
-                    stack.pop();       // remove top element of the stack
-                else
-                                       // set the index to the top value ot the
-                    idx = stack.top(); // stack
+                if (*ptr != 0)
+                {
+                    for (size_t peek_idx = (idx - 1), skip = 0; peek_idx > 0; peek_idx--)
+                    {
+                        switch (buffer.at(peek_idx))
+                        {
+                            case ']':
+                                ++skip;
+                                break;
+
+                            case '[':
+                                if (skip == 0)
+                                {
+                                    idx = peek_idx;
+                                    peek_idx = buffer.size();
+                                }
+                                else
+                                    --skip;
+                                break;
+                        }
+                    }
+                }
                 break;
         }
     }
